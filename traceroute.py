@@ -23,7 +23,6 @@ from folium.plugins import PolyLineTextPath
 GEO_API = "http://ip-api.com/json/{}"
 REQUESTS_SLEEP = 0.6
 OUTPUT_HTML = "traceroute_map.html"
-
 # Regex per IP v4
 IP_RE = re.compile(r'(\d{1,3}(?:\.\d{1,3}){3})')
 
