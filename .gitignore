@@ -1,2 +1,8 @@
 # Created by venv; see https://docs.python.org/3/library/venv.html
+.DS_Store
 traceroute_map.html
+venv/
+lib/
+include/
+bin/
+pyvenv.cfg
