@@ -16,6 +16,12 @@ import time
 import webbrowser
 from statistics import mean
 
+from functools import partial
+from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
+from urllib.parse import quote
+from threading import Thread
+
 import folium
 from folium.plugins import PolyLineTextPath
 
@@ -76,7 +82,13 @@ def build_map(locations, target):
         if coords
         else (0, 0)
     )
-    m = folium.Map(location=center, zoom_start=2)
+    m = folium.Map(location=center, zoom_start=2, tiles=None)
+
+    folium.TileLayer(
+        tiles="https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+        attr="© OpenStreetMap contributors",
+        name="OpenStreetMap",
+    ).add_to(m)
 
     # Marker per ogni hop
     for hop_index, ip, latlon in locations:
@@ -102,6 +114,24 @@ def build_map(locations, target):
 
     return m
 
+def serve_map(filename):
+    path = Path(filename).resolve()
+    handler = partial(SimpleHTTPRequestHandler, directory=str(path.parent))
+    server = ThreadingHTTPServer(("127.0.0.1", 0), handler)
+
+    Thread(target=server.serve_forever, daemon=True).start()
+
+    url = f"http://127.0.0.1:{server.server_port}/{quote(path.name)}"
+    print(f"[+] Apro la mappa: {url}")
+    webbrowser.open(url)
+
+    try:
+        while True:
+            time.sleep(1)
+    except KeyboardInterrupt:
+        print("\n[+] Server chiuso.")
+        server.shutdown()
+        server.server_close()
 
 def main():
     if len(sys.argv) < 2:
@@ -146,7 +176,7 @@ def main():
     m = build_map(locations, target)
     m.save(OUTPUT_HTML)
     print(f"[+] Mappa salvata in '{OUTPUT_HTML}'")
-    webbrowser.get("open -a 'Google Chrome' %s").open(OUTPUT_HTML)
+    serve_map(OUTPUT_HTML)
     # webbrowser.open(OUTPUT_HTML)
 
 
